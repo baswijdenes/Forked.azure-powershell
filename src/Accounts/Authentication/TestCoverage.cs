@@ -12,11 +12,12 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
+using Microsoft.Azure.Commands.Shared.Config;
+using Microsoft.Azure.PowerShell.Common.Config;
 using Microsoft.WindowsAzure.Commands.Common;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -30,6 +31,8 @@ namespace Microsoft.Azure.Commands.Common.Authentication
         private const string CsvHeaderParameters = "Parameters";
         private const string CsvHeaderSourceScript = "SourceScript";
         private const string CsvHeaderScriptLineNumber = "LineNumber";
+        private const string CsvHeaderStartDateTime = "StartDateTime";
+        private const string CsvHeaderEndDateTime = "EndDateTime";
         private const string CsvHeaderIsSuccess = "IsSuccess";
         private const string Delimiter = ",";
 
@@ -41,50 +44,35 @@ namespace Microsoft.Azure.Commands.Common.Authentication
             "AzureRM.Storage.ps1"
         };
 
-        private static readonly string s_testCoverageRootPath;
+        private static readonly string s_testCoveragePath;
 
         private static readonly ReaderWriterLockSlim s_lock = new ReaderWriterLockSlim();
 
         static TestCoverage()
         {
-            var rootDirectory = ProbeRepoDirectory();
-            if (string.IsNullOrEmpty(rootDirectory))
+            string testCoverageRootPath = null; 
+            if (AzureSession.Instance.TryGetComponent<IConfigManager>(nameof(IConfigManager), out var configManager))
             {
-                rootDirectory = GetFallbackDirectory();
+                testCoverageRootPath = configManager.GetConfigValue<string>(ConfigKeys.TestCoverageLocation);
+            }
+            if (string.IsNullOrEmpty(testCoverageRootPath))
+            {
+                testCoverageRootPath = GetFallbackLocation();
             }
 
-            s_testCoverageRootPath = Path.Combine(rootDirectory, "TestCoverageAnalysis", "Raw");
-            Console.WriteLine($"Test coverage root path: {s_testCoverageRootPath}");
-            DirectoryInfo rawDir = new DirectoryInfo(s_testCoverageRootPath);
+            s_testCoveragePath = Path.Combine(testCoverageRootPath, "TestCoverageAnalysis", "Raw");
+            DirectoryInfo rawDir = new DirectoryInfo(s_testCoveragePath);
             if (!rawDir.Exists)
             {
-                Directory.CreateDirectory(s_testCoverageRootPath);
+                Directory.CreateDirectory(s_testCoveragePath);
             }
+            Console.WriteLine($"Test coverage root path: {s_testCoveragePath}");
         }
 
-        private static string ProbeRepoDirectory()
-        {
-            string directoryPath = Assembly.GetExecutingAssembly().Location;
-            Console.WriteLine($"Executing assembly location: {directoryPath}");
-            do
-            {
-                directoryPath = Path.Combine(directoryPath, "..");
-            } while (Directory.Exists(directoryPath) && (!Directory.Exists(Path.Combine(directoryPath, "src")) || !Directory.Exists(Path.Combine(directoryPath, "artifacts"))));
-
-            if (Directory.Exists(directoryPath))
-                return Path.GetFullPath(Path.Combine(directoryPath, "artifacts"));
-
-            return null;
-        }
-
-        private static string GetFallbackDirectory()
+        private static string GetFallbackLocation()
         {
             var profilePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var azurePath = Path.Combine(profilePath, ".azure");
-            if (!Directory.Exists(azurePath))
-            {
-                Directory.CreateDirectory(azurePath);
-            }
             return azurePath;
         }
 
@@ -96,12 +84,14 @@ namespace Microsoft.Azure.Commands.Common.Authentication
                          .Append(CsvHeaderParameters).Append(Delimiter)
                          .Append(CsvHeaderSourceScript).Append(Delimiter)
                          .Append(CsvHeaderScriptLineNumber).Append(Delimiter)
+                         .Append(CsvHeaderStartDateTime).Append(Delimiter)
+                         .Append(CsvHeaderEndDateTime).Append(Delimiter)
                          .Append(CsvHeaderIsSuccess);
 
             return headerBuilder.ToString();
         }
 
-        private string GenerateCsvItem(string commandName, string parameterSetName, string parameters, string sourceScript, int scriptLineNumber, bool isSuccess)
+        private string GenerateCsvItem(string commandName, string parameterSetName, string parameters, string sourceScript, int scriptLineNumber, string startDateTime, string endDateTime, bool isSuccess)
         {
             StringBuilder itemBuilder = new StringBuilder();
             itemBuilder.Append(commandName).Append(Delimiter)
@@ -109,6 +99,8 @@ namespace Microsoft.Azure.Commands.Common.Authentication
                        .Append(parameters).Append(Delimiter)
                        .Append(sourceScript).Append(Delimiter)
                        .Append(scriptLineNumber).Append(Delimiter)
+                       .Append(startDateTime).Append(Delimiter)
+                       .Append(endDateTime).Append(Delimiter)
                        .Append(isSuccess.ToString().ToLowerInvariant());
 
             return itemBuilder.ToString();
@@ -131,7 +123,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
             if (string.Compare(testingModuleName, moduleName, true) != 0)
                 return;
 
-            var csvFilePath = Path.Combine(s_testCoverageRootPath, $"{moduleName}.csv");
+            var csvFilePath = Path.Combine(s_testCoveragePath, $"{moduleName}.csv");
             StringBuilder csvData = new StringBuilder();
 
             s_lock.EnterWriteLock();
@@ -144,7 +136,7 @@ namespace Microsoft.Azure.Commands.Common.Authentication
                 }
 
                 csvData.AppendLine();
-                var csvItem = GenerateCsvItem(commandName, qos.ParameterSetName, qos.Parameters, Path.GetFileName(sourceScriptName), qos.ScriptLineNumber, qos.IsSuccess);
+                var csvItem = GenerateCsvItem(commandName, qos.ParameterSetName, qos.Parameters, Path.GetFileName(sourceScriptName), qos.ScriptLineNumber, qos.StartTime.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss"), qos.EndTime.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss"), qos.IsSuccess);
                 csvData.Append(csvItem);
 
                 File.AppendAllText(csvFilePath, csvData.ToString());

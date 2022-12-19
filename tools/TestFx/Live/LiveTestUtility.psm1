@@ -26,7 +26,11 @@ param (
 
     [Parameter(Mandatory)]
     [ValidateNotNullOrEmpty()]
-    [string] $PSVersion
+    [string] $PSVersion,
+
+    [Parameter()]
+    [ValidateScript({ Test-Path -LiteralPath $_ -PathType Container })]
+    [string] $DataLocation
 )
 
 New-Variable -Name ResourceGroupPrefix -Value "azpsliverg" -Scope Script -Option Constant
@@ -39,10 +43,8 @@ New-Variable -Name ScenarioMaxRetryCount -Value 5 -Scope Script -Option Constant
 New-Variable -Name ScenarioMaxDelay -Value 60 -Scope Script -Option Constant
 New-Variable -Name ScenarioDelay -Value 5 -Scope Script -Option Constant
 
-New-Variable -Name RepoRootDirectory -Value ($PSScriptRoot | Split-Path | Split-Path | Split-Path) -Scope Script -Option Constant
-New-Variable -Name ArtifactsDirectory -Value (Join-Path -Path $script:RepoRootDirectory -ChildPath "artifacts") -Scope Script -Option Constant
-New-Variable -Name LiveTestRootDirectory -Value (Join-Path -Path $script:ArtifactsDirectory -ChildPath "LiveTestAnalysis") -Scope Script -Option Constant
-New-Variable -Name LiveTestRawDirectory -Value (Join-Path -Path $script:LiveTestRootDirectory -ChildPath "Raw") -Scope Script -Option Constant
+New-Variable -Name LiveTestAnalysisDirectory -Value (Join-Path -Path $DataLocation -ChildPath "LiveTestAnalysis") -Scope Script -Option Constant
+New-Variable -Name LiveTestRawDirectory -Value (Join-Path -Path $script:LiveTestAnalysisDirectory -ChildPath "Raw") -Scope Script -Option Constant
 New-Variable -Name LiveTestRawCsvFile -Value (Join-Path -Path $script:LiveTestRawDirectory -ChildPath "Az.$ModuleName.csv") -Scope Script -Option Constant
 
 function InitializeLiveTestModule {
@@ -53,12 +55,12 @@ function InitializeLiveTestModule {
         [string] $ModuleName
     )
 
-    if (!(Test-Path -LiteralPath $script:LiveTestRootDirectory -PathType Container)) {
-        New-Item -Path $script:LiveTestRootDirectory -ItemType Directory
-        New-Item -Path $script:LiveTestRawDirectory -ItemType Directory
+    if (!(Test-Path -LiteralPath $script:LiveTestAnalysisDirectory -PathType Container)) {
+        New-Item -Path $script:LiveTestAnalysisDirectory -ItemType Directory -Force
+        New-Item -Path $script:LiveTestRawDirectory -ItemType Directory -Force
     }
 
-    ({} | Select-Object "BuildId", "OSVersion", "PSVersion", "Module", "Name", "Description", "StartDateTime", "EndDateTime", "IsSuccess", "Errors" | ConvertTo-Csv -NoTypeInformation)[0] | Out-File -LiteralPath $script:LiveTestRawCsvFile -Force
+    ({} | Select-Object "BuildId", "OSVersion", "PSVersion", "Module", "Name", "Description", "StartDateTime", "EndDateTime", "IsSuccess", "Errors" | ConvertTo-Csv -NoTypeInformation)[0] | Out-File -LiteralPath $script:LiveTestRawCsvFile -Encoding utf8 -Force
 }
 
 function New-LiveTestRandomName {
@@ -236,15 +238,15 @@ function Invoke-LiveTestScenario {
             catch {
                 $snrErrorMessage = $_.Exception.Message
                 if ($snrRetryCount -eq 0) {
-                    $snrErrorDetails = "Error occurred when executing the live scenario '$Name' with error message '$snrErrorMessage'"
+                    $snrErrorDetails = "Error occurred when executing the live scenario [$Name] with error message [$snrErrorMessage]"
                 }
                 else {
-                    $snrErrorDetails = "Error occurred when retrying #$snrRetryCount of the live scenario with error message '$snrErrorMessage'"
+                    $snrErrorDetails = "Error occurred when retrying #$snrRetryCount of the live scenario with error message [$snrErrorMessage]"
                 }
 
                 $snrInvocationInfo = $_.Exception.CommandInvocation
                 if ($null -ne $snrInvocationInfo) {
-                    $snrErrorDetails += " thrown at line:$($snrInvocationInfo.ScriptLineNumber) char:$($snrInvocationInfo.OffsetInLine) by cmdlet '$($snrInvocationInfo.InvocationName)' on '$($snrInvocationInfo.Line.ToString().Trim())'."
+                    $snrErrorDetails += " thrown at line:$($snrInvocationInfo.ScriptLineNumber) char:$($snrInvocationInfo.OffsetInLine) by cmdlet [$($snrInvocationInfo.InvocationName)] on [$($snrInvocationInfo.Line.ToString().Trim())]."
                 }
 
                 $snrRetryErrors += $snrErrorDetails
@@ -288,7 +290,7 @@ function Invoke-LiveTestScenario {
             }
         }
         $snrCsvData.EndDateTime = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss")
-        Export-Csv -LiteralPath $script:LiveTestRawCsvFile -InputObject $snrCsvData -NoTypeInformation -Append
+        Export-Csv -LiteralPath $script:LiveTestRawCsvFile -InputObject $snrCsvData -Encoding utf8 -NoTypeInformation -Append
 
         Write-Host "##[endgroup]"
     }
@@ -321,7 +323,7 @@ function ConvertToLiveTestJsonErrors {
         $errorsObj | Add-Member -NotePropertyName "Retry$($n)Exception" -NotePropertyValue $Errors[$n]
     }
 
-    ConvertTo-Json $errorsObj -Compress
+    (ConvertTo-Json $errorsObj -Compress)
 }
 
 InitializeLiveTestModule -ModuleName $ModuleName

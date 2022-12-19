@@ -14,7 +14,7 @@
 @{
 
     # Script module or binary module file associated with this manifest.
-    RootModule             = 'LiveTestUtility.psm1'
+    RootModule             = 'TestCoverageUtility.psm1'
 
     # Version number of this module.
     ModuleVersion          = '0.1.0'
@@ -23,7 +23,7 @@
     CompatiblePSEditions   = 'Core', 'Desktop'
 
     # ID used to uniquely identify this module
-    GUID                   = '67e2e5f0-4157-41a5-b7f0-e193f438ad75'
+    GUID                   = 'c87d6972-26e0-4801-ac68-94d2ad3f4870'
 
     # Author of this module
     Author                 = 'Microsoft Corporation'
@@ -35,7 +35,7 @@
     Copyright              = 'Microsoft Corporation. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description            = 'Execute Azure PowerShell Live Tests'
+    Description            = 'Analyze and calculate test coverage'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion      = '5.1'
@@ -74,7 +74,7 @@
     # NestedModules = @()
 
     # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-    FunctionsToExport      = 'New-LiveTestRandomName', 'New-LiveTestResourceGroupName', 'New-LiveTestResourceName', 'New-LiveTestStorageAccountName', 'New-LiveTestResourceGroup', 'Clear-LiveTestResources', 'Invoke-LiveTestScenario'
+    FunctionsToExport      = 'Get-TestCoverageModuleDetails'
 
     # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
     CmdletsToExport        = @()

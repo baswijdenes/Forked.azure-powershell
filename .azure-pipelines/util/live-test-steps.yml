@@ -26,9 +26,17 @@ jobs:
       filePath: ./tools/TestFx/Live/InitializeLiveTestEnvironment.ps1
       arguments: -DesiredVersion ${{ parameters.psVersion }}
 
+  - task: PowerShell@2
+    displayName: Create live test data location directory
+    inputs:
+      pwsh: true
+      targetType: inline
+      script:
+        New-Item -Name $(LiveTestArtifactsName) -Path $(Pipeline.Workspace) -ItemType Directory -Force
+
   - task: DownloadPipelineArtifact@2
-    condition: and(succeeded(), eq(variables['GalleryName'], 'LocalRepo'), eq(variables['BuildPipelineBuildId'], ''))
-    displayName: Download latest artifacts from build pipeline main branch
+    condition: and(succeeded(), eq(variables['GalleryName'], 'DailyBuild'), eq(variables['BuildPipelineBuildId'], ''))
+    displayName: Download latest artifacts from daily build pipeline main branch
     inputs:
       buildType: specific
       project: $(ProjectToDownloadArtifacts)
@@ -39,8 +47,8 @@ jobs:
       targetPath: $(Pipeline.Workspace)
 
   - task: DownloadPipelineArtifact@2
-    condition: and(succeeded(), eq(variables['GalleryName'], 'LocalRepo'), ne(variables['BuildPipelineBuildId'], ''))
-    displayName: Download specific artifacts from build pipeline
+    condition: and(succeeded(), eq(variables['GalleryName'], 'DailyBuild'), ne(variables['BuildPipelineBuildId'], ''))
+    displayName: Download specific artifacts from daily build pipeline
     inputs:
       buildType: specific
       project: $(ProjectToDownloadArtifacts)
@@ -51,16 +59,16 @@ jobs:
       targetPath: $(Pipeline.Workspace)
 
   - task: PowerShell@2
-    condition: and(succeeded(), eq(variables['GalleryName'], 'LocalRepo'))
+    condition: and(succeeded(), eq(variables['GalleryName'], 'DailyBuild'))
     displayName: Copy artifacts to local repository
     inputs:
       pwsh: true
       targetType: inline
       script: |
-        New-Item -Path $(Pipeline.Workspace) -Name LocalRepo -ItemType Directory
-        $localRepoPath = Join-Path -Path $(Pipeline.Workspace) -ChildPath LocalRepo
-        Move-Item -Path (Join-Path -Path $(Pipeline.Workspace) -ChildPath *.nupkg) -Destination $localRepoPath
-        Get-ChildItem -LiteralPath $localRepoPath
+        $azPackagesDir = New-Item -Name AzPackages -Path $(LiveTestDataLocation) -ItemType Directory -Force
+        $azPackagesFiles = Join-Path -Path $(Pipeline.Workspace) -ChildPath *.nupkg
+        Move-Item -Path $azPackagesFiles -Destination $azPackagesDir
+        Get-ChildItem -LiteralPath $azPackagesDir
 
   - task: PowerShell@2
     displayName: Install desired Az module from $(GalleryName)
@@ -68,10 +76,10 @@ jobs:
       pwsh: true
       targetType: filePath
       filePath: ./tools/TestFx/Live/InvokeLiveTestCITask.ps1
-      arguments: -UseWindowsPowerShell ('${{ parameters.psVersion }}' -eq '5.1') -ScriptFile './tools/TestFx/Live/InstallLiveTestAzModule.ps1 -Source $(GalleryName) -RepoLocation (Join-Path -Path $(Pipeline.Workspace) -ChildPath LocalRepo)'
+      arguments: -UseWindowsPowerShell ('${{ parameters.psVersion }}' -eq '5.1') -ScriptFile './tools/TestFx/Live/InstallLiveTestAzModules.ps1 -Source $(GalleryName) -AzPackagesLocation (Convert-Path -LiteralPath $(LiveTestDataLocation) | Join-Path -ChildPath AzPackages)'
 
   - task: PowerShell@2
-    displayName: Connect Azure with service principal credential
+    displayName: Connect Azure with live test service principal
     inputs:
       pwsh: true
       targetType: filePath
@@ -84,7 +92,7 @@ jobs:
       pwsh: true
       targetType: filePath
       filePath: ./tools/TestFx/Live/InvokeLiveTestCITask.ps1
-      arguments: -UseWindowsPowerShell ('${{ parameters.psVersion }}' -eq '5.1') -ScriptFile './tools/TestFx/Live/InvokeLiveTestScenarios.ps1 $(Build.BuildId) ${{ parameters.vmImage }} ${{ parameters.psVersion }}'
+      arguments: -UseWindowsPowerShell ('${{ parameters.psVersion }}' -eq '5.1') -ScriptFile './tools/TestFx/Live/InvokeLiveTestScenarios.ps1 $(Build.BuildId) ${{ parameters.vmImage }} ${{ parameters.psVersion }} $(Build.SourcesDirectory) $(LiveTestDataLocation)'
       failOnStderr: true
 
   - task: PowerShell@2
@@ -93,11 +101,11 @@ jobs:
       pwsh: true
       targetType: filePath
       filePath: ./tools/TestFx/Live/SaveLiveTestResult.ps1
-      arguments: $(KustoServicePrincipalTenantId) $(KustoServicePrincipalId) $(KustoServicePrincipalSecret) $(KustoClusterName) $(KustoClusterRegion) $(LiveTestDatabaseName) $(LiveTestTableName) $(TestCoverageTableName)
+      arguments: $(KustoServicePrincipalTenantId) $(KustoServicePrincipalId) $(KustoServicePrincipalSecret) $(KustoClusterName) $(KustoClusterRegion) $(LiveTestDatabaseName) $(LiveTestTableName) $(TestCoverageTableName) $(LiveTestDataLocation)
 
   - task: PublishPipelineArtifact@1
     displayName: Publish live test results to pipeline artifact
     inputs:
       artifact: livetest-os-${{ parameters.vmImage }}-powershell-${{ parameters.psVersion }}
-      targetPath: $(Pipeline.Workspace)
+      targetPath: $(LiveTestDataLocation)
     condition: always()

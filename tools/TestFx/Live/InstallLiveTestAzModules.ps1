@@ -1,18 +1,18 @@
 param (
     [Parameter(Mandatory)]
-    [ValidateSet("PSGallery", "LocalRepo", IgnoreCase = $false)]
+    [ValidateSet("PSGallery", "DailyBuild", IgnoreCase = $false)]
     [string] $Source,
 
     [Parameter()]
-    [string] $RepoLocation
+    [string] $AzPackagesLocation
 )
 
 switch ($Source) {
     "PSGallery" {
         Set-PSRepository -Name $Source -InstallationPolicy Trusted
     }
-    "LocalRepo" {
-        Register-PSRepository -Name $Source -SourceLocation $RepoLocation -PackageManagementProvider NuGet -InstallationPolicy Trusted
+    "DailyBuild" {
+        Register-PSRepository -Name $Source -SourceLocation $AzPackagesLocation -PackageManagementProvider NuGet -InstallationPolicy Trusted
     }
 }
 

@@ -13,7 +13,6 @@
 
 function InitializeKustoPackages {
     [CmdletBinding()]
-    [OutputType([void])]
     param ()
 
     $kustoPackagesDirectoryName = "KustoPackages"
@@ -22,7 +21,7 @@ function InitializeKustoPackages {
         Remove-Item -LiteralPath $kustoPackagesDirectory -Recurse -Force
     }
 
-    New-Item -Path . -Name $kustoPackagesDirectoryName -ItemType Directory
+    New-Item -Path . -Name $kustoPackagesDirectoryName -ItemType Directory -Force
 
     $kustoPackages = @(
         @{ PackageName = "Azure.Core"; PackageVersion = "1.22.0"; DllName = "Azure.Core.dll" },
@@ -51,7 +50,6 @@ function InitializeKustoPackages {
 
 function Import-KustoDataFromCsv {
     [CmdletBinding()]
-    [OutputType([void])]
     param (
         [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()]

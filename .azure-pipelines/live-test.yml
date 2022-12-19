@@ -41,7 +41,10 @@ parameters:
   default: 7.0.x
 
 variables:
+  LiveTestArtifactsName: LiveTestArtifacts
+  LiveTestDataLocation: $(Pipeline.Workspace)/$(LiveTestArtifactsName)
   EnableTestCoverage: true
+  TestCoverageLocation: $(LiveTestDataLocation)
 
 trigger:
 - none
@@ -52,6 +55,20 @@ jobs:
     name: 'win_ps_5_1'
     vmImage: ${{ parameters.win_image }}
     psVersion: ${{ parameters.win_ps_5_1 }}
+    dotnetVersion: ${{ parameters.dotnet_sdk_6 }}
+
+- template: util/live-test-steps.yml
+  parameters:
+    name: 'ps_7_0_x_win'
+    vmImage: ${{ parameters.win_image }}
+    psVersion: ${{ parameters.ps_7_0_x }}
+    dotnetVersion: ${{ parameters.dotnet_sdk_6 }}
+
+- template: util/live-test-steps.yml
+  parameters:
+    name: 'ps_7_1_x_win'
+    vmImage: ${{ parameters.win_image }}
+    psVersion: ${{ parameters.ps_7_1_x }}
     dotnetVersion: ${{ parameters.dotnet_sdk_6 }}
 
 - template: util/live-test-steps.yml
@@ -67,6 +84,20 @@ jobs:
     vmImage: ${{ parameters.win_image }}
     psVersion: ${{ parameters.ps_latest }}
     dotnetVersion: ${{ parameters.dotnet_sdk_7 }}
+
+- template: util/live-test-steps.yml
+  parameters:
+    name: 'ps_7_0_x_linux'
+    vmImage: ${{ parameters.linux_image }}
+    psVersion: ${{ parameters.ps_7_0_x }}
+    dotnetVersion: ${{ parameters.dotnet_sdk_6 }}
+
+- template: util/live-test-steps.yml
+  parameters:
+    name: 'ps_7_1_x_linux'
+    vmImage: ${{ parameters.linux_image }}
+    psVersion: ${{ parameters.ps_7_1_x }}
+    dotnetVersion: ${{ parameters.dotnet_sdk_6 }}
 
 - template: util/live-test-steps.yml
   parameters:
