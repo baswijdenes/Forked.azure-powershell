@@ -26,7 +26,7 @@ Param(
     [Switch]
     $GenerateDocumentationFile,
 
-    [Switch]
+    [string]
     $EnableTestCoverage,
 
     [Switch]
@@ -40,10 +40,10 @@ Param(
 
     [Switch]
     $StaticAnalysisDependency,
-    
+
     [Switch]
     $StaticAnalysisSignature,
-    
+
     [Switch]
     $StaticAnalysisHelp,
 
@@ -78,7 +78,7 @@ If ($Build)
     {
         $buildCmdResult += " -p:GenerateDocumentationFile=false"
     }
-    if ($EnableTestCoverage)
+    if ($EnableTestCoverage -eq "true")
     {
         $buildCmdResult += " -p:TestCoverage=TESTCOVERAGE"
     }
