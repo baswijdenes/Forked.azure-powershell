@@ -124,7 +124,7 @@ An object that represents a private endpoint connection for a container registry
 To construct, see NOTES section for PRIVATEENDPOINTCONNECTION properties and create a hash table.
 
 ```yaml
-Type: Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20220201Preview.IPrivateEndpointConnection
+Type: Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20221201.IPrivateEndpointConnection
 Parameter Sets: Update
 Aliases:
 
@@ -212,7 +212,8 @@ Accept wildcard characters: False
 ```
 
 ### -ResourceGroupName
-The name of the resource group to which the container registry belongs.
+The name of the resource group.
+The name is case insensitive.
 
 ```yaml
 Type: System.String
@@ -227,7 +228,8 @@ Accept wildcard characters: False
 ```
 
 ### -SubscriptionId
-The Microsoft Azure subscription ID.
+The ID of the target subscription.
+The value must be an UUID.
 
 ```yaml
 Type: System.String
@@ -277,11 +279,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20220201Preview.IPrivateEndpointConnection
+### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20221201.IPrivateEndpointConnection
 
 ## OUTPUTS
 
-### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20220201Preview.IPrivateEndpointConnection
+### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20221201.IPrivateEndpointConnection
 
 ## NOTES
 
@@ -299,6 +301,7 @@ To create the parameters described below, construct a hash table containing the 
   - `[SystemDataLastModifiedAt <DateTime?>]`: The timestamp of resource modification (UTC).
   - `[SystemDataLastModifiedBy <String>]`: The identity that last modified the resource.
   - `[SystemDataLastModifiedByType <LastModifiedByType?>]`: The type of identity that last modified the resource.
+  - `[AzureAsyncOperation <String>]`: 
   - `[PrivateEndpointId <String>]`: This is private endpoint resource created with Microsoft.Network resource provider.
   - `[PrivateLinkServiceConnectionStateActionsRequired <ActionsRequired?>]`: A message indicating if changes on the service provider require any updates on the consumer.
   - `[PrivateLinkServiceConnectionStateDescription <String>]`: The description for connection status. For example if connection is rejected it can indicate reason for rejection.

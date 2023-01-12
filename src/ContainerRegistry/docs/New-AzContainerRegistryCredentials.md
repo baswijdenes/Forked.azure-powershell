@@ -119,7 +119,7 @@ The parameters used to generate credentials for a specified token or user of a c
 To construct, see NOTES section for GENERATECREDENTIALSPARAMETER properties and create a hash table.
 
 ```yaml
-Type: Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20220201Preview.IGenerateCredentialsParameters
+Type: Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20221201.IGenerateCredentialsParameters
 Parameter Sets: Generate, GenerateViaIdentity
 Aliases:
 
@@ -192,7 +192,8 @@ Accept wildcard characters: False
 ```
 
 ### -ResourceGroupName
-The name of the resource group to which the container registry belongs.
+The name of the resource group.
+The name is case insensitive.
 
 ```yaml
 Type: System.String
@@ -207,7 +208,8 @@ Accept wildcard characters: False
 ```
 
 ### -SubscriptionId
-The Microsoft Azure subscription ID.
+The ID of the target subscription.
+The value must be an UUID.
 
 ```yaml
 Type: System.String
@@ -272,13 +274,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20220201Preview.IGenerateCredentialsParameters
+### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20221201.IGenerateCredentialsParameters
 
 ### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.IContainerRegistryIdentity
 
 ## OUTPUTS
 
-### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20220201Preview.IGenerateCredentialsResult
+### Microsoft.Azure.PowerShell.Cmdlets.ContainerRegistry.Models.Api20221201.IGenerateCredentialsResult
 
 ## NOTES
 
@@ -295,18 +297,18 @@ To create the parameters described below, construct a hash table containing the 
   - `[TokenId <String>]`: The resource ID of the token for which credentials have to be generated.
 
 `INPUTOBJECT <IContainerRegistryIdentity>`: Identity Parameter
-  - `[ConnectedRegistryName <String>]`: The name of the connected registry.
-  - `[ExportPipelineName <String>]`: The name of the export pipeline.
+  - `[AgentPoolName <String>]`: The name of the agent pool.
   - `[GroupName <String>]`: The name of the private link resource.
   - `[Id <String>]`: Resource identity path
-  - `[ImportPipelineName <String>]`: The name of the import pipeline.
-  - `[PipelineRunName <String>]`: The name of the pipeline run.
   - `[PrivateEndpointConnectionName <String>]`: The name of the private endpoint connection.
   - `[RegistryName <String>]`: The name of the container registry.
   - `[ReplicationName <String>]`: The name of the replication.
-  - `[ResourceGroupName <String>]`: The name of the resource group to which the container registry belongs.
+  - `[ResourceGroupName <String>]`: The name of the resource group. The name is case insensitive.
+  - `[RunId <String>]`: The run ID.
   - `[ScopeMapName <String>]`: The name of the scope map.
-  - `[SubscriptionId <String>]`: The Microsoft Azure subscription ID.
+  - `[SubscriptionId <String>]`: The ID of the target subscription. The value must be an UUID.
+  - `[TaskName <String>]`: The name of the container registry task.
+  - `[TaskRunName <String>]`: The name of the task run.
   - `[TokenName <String>]`: The name of the token.
   - `[WebhookName <String>]`: The name of the webhook.
 
