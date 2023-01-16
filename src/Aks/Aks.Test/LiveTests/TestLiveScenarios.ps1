@@ -15,7 +15,10 @@ Invoke-LiveTestScenario -Name "Test_AKS_CURD" -Description "Test AKS Cluster CRU
 	Write-Host "------------------------------------1"
 	Get-AzContext | select *
 	Write-Host "------------------------------------2"
-    New-AzAksCluster -ResourceGroupName $resourceGroupName -Name $kubeClusterName -SshKeyValue $keyValue
+	Write-Host "------------------------------------2-1: " ${env:LIVETESTSERVICEPRINCIPALID}
+	Write-Host "------------------------------------2-2: " ${env:LIVETESTSERVICEPRINCIPALSECRET}
+	$credObject = $(createTestCredential ${env:LIVETESTSERVICEPRINCIPALID} ${env:LIVETESTSERVICEPRINCIPALSECRET})
+    New-AzAksCluster -ResourceGroupName $resourceGroupName -Name $kubeClusterName -SshKeyValue $keyValue -ServicePrincipalIdAndSecret $credObject
 	Write-Host "------------------------------------3"
     $cluster = Get-AzAksCluster -ResourceGroupName $resourceGroupName -Name $kubeClusterName
     Assert-NotNull $cluster.Fqdn
