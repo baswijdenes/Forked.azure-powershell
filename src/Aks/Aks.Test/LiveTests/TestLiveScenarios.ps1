@@ -7,6 +7,8 @@ Invoke-LiveTestScenario -Name "Test_AKS_CURD" -Description "Test AKS Cluster CRU
     # Generate random resource name if necessary
     $kubeClusterName = New-LiveTestResourceName
 	
+    $DebugPreference = "Continue"
+	
     ssh-keygen -t rsa -f id_rsa -q -N '"123456"'
     $keyValue = Get-Content id_rsa.pub -Raw
     # step 1: create a default aks cluster with default node pool
